@@ -1,0 +1,298 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<meta charset="utf-8">
+	<head>
+		<title>Paris vs New-York</title>
+		<script type="text/javascript" src="http://d3js.org/d3.v3.js"></script>
+		<script src="js/update.js"></script>
+		<link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+	</head>
+
+	<style type="text/css">
+		#boroughs {
+  		stroke: grey;
+		stroke-width: 1px;
+		fill: none;
+		}
+		
+		#arrondissements {
+  		stroke: grey;
+		stroke-width: 1px;
+		fill: none;
+		}
+
+		#slider {
+	    background: rgba(0,0,0,0.5);
+	    width: 300px;
+	    border-radius: 10px;
+	    margin: auto;
+	    margin-top: 250px;
+		}
+
+
+		#tooltip {
+		  position: absolute;
+		  width: auto;
+		  height: auto;
+		  padding: 10px;
+		  background-color: white;
+		  -webkit-border-radius: 2px;
+		  -moz-border-radius: 2px;
+		  border-radius: 2px;
+		  -webkit-box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
+		  -moz-box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
+		  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+		  pointer-events: none;
+		}
+
+		#tooltip.hidden {
+		  display: none;
+		}
+
+		#tooltip p {
+		  margin: 0;
+		  font-family: sans-serif;
+		  font-size: 13px;
+		  line-height: 16px;
+		}
+
+		.button {
+			display: inline-block;
+			outline: none;
+			cursor: pointer;
+			text-align: center;
+			text-decoration: none;
+			font: 12px/100% TheSerif, sans-serif;
+			padding: .25em 1em .45em;
+			text-shadow: 0 1px 1px rgba(0,0,0,.3);
+			-webkit-border-radius: .5em; 
+			-moz-border-radius: .5em;
+			border-radius: .5em;
+			-webkit-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+			-moz-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+			box-shadow: 0 1px 2px rgba(0,0,0,.2);
+		}
+		.button:hover {
+			text-decoration: none;
+		}
+		.button:active {
+			position: relative;
+			top: 1px;
+		}
+		.grey {
+			color: #464646;
+			border: solid 1px #afafaf;
+			background: #6e6e6e;
+			background: -webkit-gradient(linear, left top, left bottom, from(#deeaf1), to(#a5aebf));
+			background: -moz-linear-gradient(top,  #deeaf1,  #a5aebf);
+			filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#deeaf1', endColorstr='#a5aebf');
+		}
+		.grey:hover {
+
+			color: #fff;
+			background: #616161;
+			background: -webkit-gradient(linear, left top, left bottom, from(#757575), to(#4b4b4b));
+			background: -moz-linear-gradient(top,  #757575,  #4b4b4b);
+			filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#757575', endColorstr='#4b4b4b');
+		}
+		.grey:active {
+			color: #afafaf;
+			background: -webkit-gradient(linear, left top, left bottom, from(#a5aebf), to(#deeaf1));
+			background: -moz-linear-gradient(top,  #a5aebf,  #deeaf1);
+			filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#a5aebf', endColorstr='#deeaf1');
+		}
+
+
+		.q0-9 { fill:rgb(247,251,255); }
+		.q1-9 { fill:rgb(222,235,247); }
+		.q2-9 { fill:rgb(198,219,239); }
+		.q3-9 { fill:rgb(158,202,225); }
+		.q4-9 { fill:rgb(107,174,214); }
+		.q5-9 { fill:rgb(66,146,198); }
+		.q6-9 { fill:rgb(33,113,181); }
+		.q7-9 { fill:rgb(8,81,156); }
+		.q8-9 { fill:rgb(8,48,107); }
+	</style>
+	<body>
+		<script src="http://d3js.org/d3.geo.projection.v0.min.js"></script>
+		<script src="http://d3js.org/topojson.v1.min.js"></script>
+		<script src="js/update.js"></script>
+		<div id="tooltip" class="hidden">
+  			<p><strong><span id="locationTooltip">All</span></strong>: </p><span id="valueTooltip">10000</span> inhabitants
+		</div>
+		<div class="row">
+			<div class="span3"></div>
+			<div class="span4">
+			<h1 >New-York vs Paris</h1>
+			<h3>a look at population density</h3></div>
+		</div>	
+		<hr>
+		<div class="row">
+		<div id="area1" class="span4">
+			<script type="text/javascript">
+				var width = 350, 
+				    height = 350;
+				
+				//var radius = d3.scale.linear().range([1,5]);
+
+				
+	    		var projection = d3.geo.mercator()
+	  				.center([-73.94, 40.70])
+	  				.scale(200000)
+	  				.translate([(width) / 2, (height)/2])
+				    .precision(.1);
+
+				var path = d3.geo.path()
+				    .projection(projection);
+
+				var svg = d3.select(area1).append("svg")
+				    .attr("width", width)
+				    .attr("height", height);
+
+				var g = svg.append("g");
+
+				var boroughs= g.append("g")
+					.attr("id", "boroughs")
+
+	    		d3.json("data/boroughs.json", function(error, nyb) {
+					boroughs.selectAll(".boroughs")
+						.data(nyb.features)
+						.enter().append("path")
+						.attr("class", function(d){ return d.properties.name; })
+						.attr("d", path);
+				});
+			</script>
+		</div>
+		<div id="area2" class="span4">
+			<script type="text/javascript">
+				var width = 350, 
+				    height = 350;
+				
+				//var radius = d3.scale.linear().range([1,5]);
+				
+	    		var projection2 = d3.geo.mercator()
+	  				.center([2.34, 48.85])
+	  				.scale(200000)
+	  				.translate([(width) / 2, (height)/2])
+				    .precision(.1);
+
+				var path2 = d3.geo.path()
+				    .projection(projection2);
+
+				var svg2 = d3.select(area2).append("svg")
+				    .attr("width", width)
+				    .attr("height", height);
+
+				var g2 = svg2.append("g");
+
+				var arrondissements= g2.append("g")
+					.attr("id", "arrondissements")
+
+	    		d3.json("data/paris.json", function(error, parisA) {
+					arrondissements.selectAll(".arrondissements")
+						.data(parisA.features)
+						.enter().append("path")
+						.attr("class", function(d){ return d.properties.name; })
+						.attr("d", path2);
+				});
+			</script>
+		</div>	
+		</div>
+		<div class="row">
+			<h3 class="span2"></h3>
+			<h3 class="span4">New-York:
+			</h3>	
+			<h3 class="span2">Paris:
+			</h3>
+		</div>		
+		<div class="row">
+			<h3 class="span2"></h3>
+			<div class="span4"> 786 km²
+			</div>	
+			<div class="span2">105 km²
+			</div>
+		</div>
+		<div class="row">
+			<h3 class="span2"></h3>
+			<div class="span4" style="visibility: visible" id="popNY">-
+			</div>	
+			<div class="span2" style="visibility: visible" id="popParis">-
+			</div>
+		</div>
+		<hr>
+		<div class="row">
+
+			<div class="span4"></div>
+			<div class="span2">
+			    <h2 style="visibility: visible" id="yearClicked" >Select a year</h2>
+			    <hr>
+			</div>
+		</div>	
+		<div class="row">
+			<div class="span3"></div>
+			<div id="area2" class="span4">
+				<button class="button grey" id="Dimension" type="submit" value="1870" title="Housing" onclick="NY(value)">1870</button>
+				<button class="button grey" id="Dimension" type="submit" value="1950" title="Housing" onclick="NY(value)">1950</button>
+				<button class="button grey" id="Dimension" type="submit" value="2000" title="Housing" onclick="NY(value)">2000</button>
+				<button class="button grey" id="Dimension" type="submit" value="2010" title="Housing" onclick="NY(value)">2010</button>
+			</div>	
+		</div><hr>
+		<div class="row">
+			<script>
+				var width = 800,
+				    height = 60;
+
+
+				var svg = d3.select("body").append("svg")
+				    .attr("width", width)
+				    .attr("height", height);
+
+
+				var data=[{text:"160 h/km²",col:"#fff"},{text:"8660  h/km²",col:"#fcfbfd"},{text:"17159 h/km²",col:"#efedf5"},{text:"25659 h/km²",col:"#dadaeb"},{text:"34158 h/km²",col:"#bcbddc"},{ text:"42658 h/km²",col:"#9e9ac8"},{ text:"51157 h/km²",col:"#807dba"},{text:"59657 h/km²",col:"#6a51a3"},{text:"68156  h/km²",col:"#54278f"},{text:"76656 h/km²",col:"#3f007d"}];
+
+				var g3=svg.selectAll("rect")
+				    .data(data)
+				    .enter()
+				    .append("g");
+
+				var circle=g3.append("rect")
+                    .attr("width", 10)
+                    .attr("height", 10)
+				    .attr("x", function(d, i) {
+				    	if(i<5)
+				            return (i * 100)+135;
+				        if(i>=5)
+				            return ((i-5) * 100)+135;
+				    })
+				    .attr("y", function(d, i) {
+				    	if(i<5)
+				            return height/4-10;
+				        if(i>=5)
+				            return 3*height/4-10;
+				    })
+				    .style("fill",  function(d,i) {
+				            return d.col;
+				    });
+
+				var text=g3.append("text")
+				    .attr("dx", function(d, i) {
+				    	if(i<5)
+				            return (i * 100) + 148;
+				        if(i>=5)
+				            return ((i-5) * 100)+148;
+				    })
+				    .attr("dy", function(d, i) {
+				    	if(i<5)
+				            return height/4-5;
+				        if(i>=5)
+				            return 3*height/4-5;
+				    })
+				    .attr("y", ".35em")
+				    .style("font-size","11px")
+				    .style("fill","rgb(120,120,120)")
+				    .text(function(d) { return d.text; });
+
+			</script>
+		</div>
+	</body>
+</html>
